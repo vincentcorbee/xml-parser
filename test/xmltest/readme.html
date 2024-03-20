@@ -1,0 +1,79 @@
+<html>
+  <title>XML Test Cases</title>
+  <body>
+    <h1>XML Test Cases version 1998-11-18</h1>
+    <p>
+      Copyright (C) 1998 James Clark. All rights reserved. Permission is granted
+      to copy and modify this collection in any way for internal use within a
+      company or organization. Permission is granted to redistribute the file
+      <code>xmltest.zip</code> containing this collection to third parties
+      provided that no modifications of any kind are made to this file. Note
+      that permission to distribute the collection in any other form is not
+      granted.
+    </p>
+
+    <p>The collection is structured into three directories:</p>
+
+    <dl>
+      <dt><code>not-wf</code></dt>
+      <dd>this contains cases that are not well-formed XML documents</dd>
+      <dt><code>valid</code></dt>
+      <dd>this contains cases that are valid XML documents</dd>
+      <dt><code>invalid</code></dt>
+      <dd>
+        this contains cases that are well-formed XML documents but are not valid
+        XML documents
+      </dd>
+    </dl>
+    <p>
+      The <code>not-wf</code> and <code>valid</code> directories each have three
+      subdirectories:
+    </p>
+
+    <dl>
+      <dt>
+        <code>sa</code>
+      </dt>
+
+      <dd>
+        this contains cases that are standalone (as defined in XML) and do not
+        have references to external general entities
+      </dd>
+
+      <dt>
+        <code>ext-sa</code>
+      </dt>
+
+      <dd>
+        this contains case that are standalone and have references to external
+        general entities
+      </dd>
+
+      <dt>
+        <code>not-sa</code>
+      </dt>
+
+      <dd>this contains cases that are not standalone</dd>
+    </dl>
+    <p>
+      In each directory, files with a <code>.xml</code> extension are the XML
+      document test cases, and files with a <code>.ent</code> extension are
+      external entities referenced by the test cases.
+    </p>
+
+    <p>
+      Within the <code>valid</code> directory, each of these three
+      subdirectories has an <code>out</code> subdirectory which contains an
+      equivalent <a href="canonxml.html">canonical XML</a> document for each of
+      the cases.
+    </p>
+
+    <p></p>
+    <p>Bug reports and contributions of new test cases are welcome.</p>
+
+    <p></p>
+    <address>
+      <a href="mailto:jjc@jclark.com">James Clark</a>
+    </address>
+  </body>
+</html>

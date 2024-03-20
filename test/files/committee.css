@@ -1,0 +1,127 @@
+P {
+  font-family:
+    Times New Roman,
+    Times,
+    serif;
+  font-size: 12pt;
+  margin-left: 1pc;
+  text-align: justify;
+}
+H1 {
+  color: #000066;
+  font-family: 'Trebuchet MS', Helvetica, Arial, sans-serif;
+  font-size: 24pt;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+}
+H2 {
+  color: #000066;
+  font-family: 'Trebuchet MS', Helvetica, Arial, sans-serif;
+  text-transform: capitalize;
+}
+H3 {
+  color: #000066;
+  font-family: 'Trebuchet MS', Helvetica, Arial, sans-serif;
+  text-transform: capitalize;
+}
+A {
+  color: blue;
+  font-weight: bold;
+}
+A:visited {
+  color: maroon;
+}
+A:active {
+  background-color: blue;
+  color: white;
+}
+A:hover {
+  background-color: purple;
+  color: white;
+}
+BODY {
+  background-color: white;
+  margin-left: 1pc;
+  margin-right: 1pc;
+}
+.topbox {
+  background-color: #cccccc;
+  border-bottom: black thin;
+  border-left: black thin;
+  border-right: black thin;
+  border-top: #000000 thin;
+  color: #000000;
+  font-family: sans-serif;
+  font-size: 10pt;
+  font-weight: bold;
+  margin-left: 2%;
+  margin-right: 2%;
+  padding-bottom: 5px;
+  padding-top: 5px;
+  text-align: right;
+}
+.bottom {
+  background-color: #eeeeee;
+  border-bottom: thin;
+  border-left: thin;
+  border-right: thin;
+  border-top: thin;
+  font-family: sans-serif;
+  font-size: 10pt;
+  margin-left: 0%;
+  margin-right: 0%;
+  padding-left: 3pc;
+}
+H4 {
+  color: #0066cc;
+  font-family: 'Trebuchet MS', Helvetica, Arial, sans-serif;
+  text-transform: capitalize;
+}
+OL LI {
+  list-style: lower-roman;
+}
+UL LI {
+  list-style: square;
+}
+.main {
+  background-color: #6699ff;
+  border-bottom: black thin dotted;
+  border-left: black thin dotted;
+  border-right: black thin dotted;
+  border-top: #000000 thin dotted;
+  color: #eeeeee;
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-size: 24pt;
+  font-weight: bold;
+  margin-left: 4%;
+  margin-right: 4%;
+}
+H5 {
+  color: #000066;
+  font-family: 'Trebuchet MS', Helvetica, Arial, sans-serif;
+  text-transform: capitalize;
+}
+.purple {
+  color: #6633ff;
+}
+OL LI LI {
+  list-style: lower-alpha;
+}
+UL LI LI {
+  list-style: circle;
+}
+.membersonly {
+  background-color: #ccccff;
+  border-bottom: thin solid;
+  border-left: solid;
+  border-right: solid;
+  border-top: thin solid;
+  color: blue;
+  font-family: sans-serif;
+  font-weight: bold;
+}
+.public {
+  color: #aaaaff;
+  font-weight: bold;
+}
