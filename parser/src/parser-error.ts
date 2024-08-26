@@ -23,20 +23,20 @@ export class ParserError extends Error {
       .join('\n');
 
     const lines = highlightedSource.split('\n');
+    const padding = 2;
+    const spacing = `${line}`.length + padding;
 
-    const spacing = `${line}`.length + 2;
-
-    let lineNumber = Math.max(line - 3, 1);
+    let startingLine = Math.max(line - 3, 1);
 
     for (let i = 0, l = lines.length; i < l; i++) {
-      const currentLineNumber = `${lineNumber}`;
+      const currentLine = `${startingLine}`;
 
-      message += `${lineNumber === line ? `${lineIndicator} ` : '  '}${currentLineNumber}${' '.repeat(spacing - currentLineNumber.length)}${border} ${lines[i]}\n`;
+      message += `${startingLine === line ? `${lineIndicator} ` : ' '.repeat(padding)}${currentLine}${' '.repeat(spacing - currentLine.length)}${border} ${lines[i]}\n`;
 
-      lineNumber++;
+      startingLine++;
     }
 
-    message += `  ${' '.repeat(spacing)}${border} ${' '.repeat(col)}${'^'.repeat(1)}`;
+    message += `${' '.repeat(padding)}${' '.repeat(spacing)}${border} ${' '.repeat(col - 1)}${'^'.repeat(1)}`;
 
     super(message);
   }

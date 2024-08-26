@@ -190,8 +190,6 @@ export class XMLParser {
       else output += lexer.advance(token);
     }
 
-    /* Consume matching quote */
-
     lexer.advance(quote);
 
     return output;
@@ -286,7 +284,8 @@ export class XMLParser {
       localName,
       value,
       namespaceURI,
-      ownerElement
+      ownerElement,
+      parentNode: ownerElement
     };
   }
 
@@ -294,18 +293,19 @@ export class XMLParser {
     [18] CDSect ::= CDStart CData CDEnd
   */
   private parseCDSect(): CDATASectionNode {
-    const { lexer } = this;
+    const { lexer, parentNode } = this;
 
     lexer.consumeCDATAStart();
 
-    const value = lexer.consumeCDATA();
+    const value = lexer.eatCDATA();
 
     lexer.consumeCDATAEnd();
 
     return {
       type: CDATA_SECTION_NODE,
       name: '#cdata-section',
-      data: value
+      data: value,
+      parentNode
     };
   }
 
@@ -364,22 +364,16 @@ export class XMLParser {
   private parseVersionNum(): string {
     const { lexer } = this;
 
-    // const quote = lexer.consumeQuote();
-
     const major = lexer.nextChar();
 
     lexer.consumePeriod();
 
-    const minor = lexer.nextCharCode();
+    const minor = lexer.consumeDigits();
 
-    if (major !== '1' && (minor < 0x30 || minor > 0x39))
-      this.handleError(
-        `Unsupported version ${major}.${String.fromCharCode(minor)}`
-      );
+    if (major !== '1')
+      this.handleError(`Unsupported version ${major}.${minor}`);
 
-    // lexer.consume(quote);
-
-    return `${major}.${String.fromCharCode(minor)}`;
+    return `${major}.${minor}`;
   }
 
   /*
@@ -453,7 +447,7 @@ export class XMLParser {
     [14] Comment ::= '<!--' ((Char - '-') | ('-' (Char - '-')))* '-->'
   */
   private parseComment(): CommentNode {
-    const { lexer } = this;
+    const { lexer, parentNode } = this;
 
     lexer.consumeCommentStart();
 
@@ -474,7 +468,8 @@ export class XMLParser {
     return {
       type: COMMENT_NODE,
       name: '#comment',
-      data
+      data,
+      parentNode
     };
   }
 
@@ -498,7 +493,7 @@ export class XMLParser {
     [16] PI ::= '<?' PITarget (S (Char* - (Char* '?>' Char*)))? '?>'
   */
   private parsePI(): ProcessingInstructionNode {
-    const { lexer } = this;
+    const { lexer, parentNode } = this;
 
     lexer.consumeStartProcessingInstruction();
 
@@ -523,7 +518,8 @@ export class XMLParser {
       type: PROCESSING_INSTRUCTION_NODE,
       target: PITarget,
       data,
-      name: PITarget
+      name: PITarget,
+      parentNode
     };
   }
 
@@ -531,12 +527,15 @@ export class XMLParser {
     [43] content ::= CharData? ((element | Reference | CDSect | PI | Comment) CharData?)*
   */
   private parseContent(): void {
-    const { lexer } = this;
+    const {
+      lexer,
+      parentNode: { children }
+    } = this;
 
     while (lexer.hasData()) {
       if (lexer.matchString(START_END_TAG)) break;
 
-      this.parseElementChild();
+      children.push(this.parseElementChild());
     }
   }
 
@@ -552,7 +551,7 @@ export class XMLParser {
   private parseElement(): ElementNode {
     const { lexer, nsMap, localNsMap, parentNode } = this;
 
-    // lexer.consumeLeftAngleBracket();
+    lexer.consumeLeftAngleBracket();
 
     const { name, prefix, localName } = this.parseQName();
 
@@ -571,7 +570,7 @@ export class XMLParser {
       parentNode
     };
 
-    parentNode.children.push(element);
+    // parentNode.children.push(element);
 
     this.parentNode = element;
 
@@ -612,12 +611,14 @@ export class XMLParser {
   }
 
   private parseTextNode(): TextNode {
+    const { parentNode } = this;
     const data = this.parseCharData();
 
     return {
       type: TEXT_NODE,
       name: '#text',
-      data
+      data,
+      parentNode
     };
   }
 
@@ -631,9 +632,9 @@ export class XMLParser {
 
     let output = '';
 
-    while (lexer.hasData()) {
-      const token = lexer.peek();
+    let token: string;
 
+    while ((token = lexer.peek()) !== EOF) {
       if (token === DOUBLE_QUOTE) break;
 
       if (token === APOSTROPHE) output += this.parseEntityRef();
@@ -705,7 +706,7 @@ export class XMLParser {
     [16] doctypedecl ::= '<!DOCTYPE' S QName (S ExternalID)? S? ('[' (markupdecl | PEReference | S)* ']' S?)? '>'
   */
   private parseDoctypedecl(): DocumentTypeNode {
-    const { lexer } = this;
+    const { lexer, parentNode } = this;
 
     lexer.consumeDoctypeStart();
 
@@ -722,7 +723,8 @@ export class XMLParser {
 
     return {
       type: DOCUMENT_TYPE_NODE,
-      name
+      name,
+      parentNode
     };
   }
 
@@ -741,7 +743,7 @@ export class XMLParser {
         return this.parseComment();
       case lexer.matchString(START_PROCESSING_INSTRUCTION):
         return this.parsePI();
-      case lexer.matchAndEat(LEFT_ANGLE_BRACKET):
+      case lexer.match(LEFT_ANGLE_BRACKET):
         return this.parseElement();
       case !lexer.match(RIGHT_ANGLE_BRACKET):
         return this.parseTextNode();
@@ -826,25 +828,32 @@ export class XMLParser {
   private parseDocument(): DocumentNode {
     const { lexer } = this;
 
+    const children = [];
+
     const document: DocumentNode = {
       type: DOCUMENT_NODE,
       name: '#document',
       doctype: null,
       documentElement: null,
       characterSet: 'UTF-8',
-      children: [],
+      children,
       standalone: false,
-      version: null
+      version: null,
+      parentNode: null
     };
 
     this.parentNode = document;
 
     this.parseProlog(document);
 
-    if (!lexer.matchAndEat(LEFT_ANGLE_BRACKET))
+    if (!lexer.match(LEFT_ANGLE_BRACKET))
       this.handleError(`Start tag expected, '<'.`);
 
-    document.documentElement = this.parseElement();
+    const documentElement = this.parseElement();
+
+    document.documentElement = documentElement;
+
+    children.push(documentElement);
 
     this.parseMisc();
 

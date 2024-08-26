@@ -86,9 +86,15 @@ describe('XMLParser', () => {
         xmlDeclaration: null,
         root: {
           type: 'emptyTag',
-          name: 'Foo',
+          name: 'Element',
           attrs: {},
-          children: []
+          children: [
+            {
+              type: 'text',
+              name: '#text',
+              value: ''
+            }
+          ]
         }
       });
     });
@@ -106,7 +112,13 @@ describe('XMLParser', () => {
           type: 'emptyTag',
           name: 'Element',
           attrs: {},
-          children: []
+          children: [
+            {
+              type: 'text',
+              name: '#text',
+              value: ''
+            }
+          ]
         }
       });
     });
@@ -129,7 +141,13 @@ describe('XMLParser', () => {
           type: 'emptyTag',
           name: 'Element',
           attrs: {},
-          children: []
+          children: [
+            {
+              type: 'text',
+              name: '#text',
+              value: ''
+            }
+          ]
         }
       });
     });

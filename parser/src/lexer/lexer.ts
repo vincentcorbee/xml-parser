@@ -39,6 +39,8 @@ const {
   END_PROCESSING_INSTRUCTION
 } = Tokens;
 
+const { NEWLINE: NEWLINE_CODE } = CharCodes;
+
 export class Lexer {
   private _source: string;
 
@@ -99,19 +101,19 @@ export class Lexer {
     return char;
   }
 
-  match(token: string) {
-    return this.peek() === token;
+  match(char: string) {
+    return this.peek() === char;
   }
 
-  matchAndEat(token: string): boolean {
+  matchAndEat(char: string): boolean {
     const lookahead = this.peek();
 
-    if (token !== lookahead) return false;
+    if (char !== lookahead) return false;
 
     this.index++;
     this.col++;
 
-    if (token === NEWLINE) {
+    if (char === NEWLINE) {
       this.line++;
       this.col = 1;
     }
@@ -120,30 +122,30 @@ export class Lexer {
   }
 
   matchString(needle: string): boolean {
-    const { _source: _input, index } = this;
-    const { length } = _input;
+    const { _source, index } = this;
+    const { length } = _source;
 
     const { length: needleLength } = needle;
 
     if (index + needleLength > length) return false;
 
     for (let i = 0; i < needleLength; i++) {
-      if (_input[index + i] !== needle[i]) return false;
+      if (_source[index + i] !== needle[i]) return false;
     }
 
     return true;
   }
 
   matchStringAndEat(needle: string): boolean {
-    const { _source: _input, index } = this;
-    const { length } = _input;
+    const { _source, index } = this;
+    const { length } = _source;
 
     const { length: needleLength } = needle;
 
     if (index + needleLength > length) return false;
 
     for (let i = 0; i < needleLength; i++) {
-      if (_input[index + i] !== needle[i]) return false;
+      if (_source[index + i] !== needle[i]) return false;
     }
 
     this.index += needleLength;
@@ -169,36 +171,37 @@ export class Lexer {
   }
 
   consume(char?: string): string {
-    const nextChar = this.nextChar();
+    const nextChar = this.peek();
 
-    if (nextChar === char) return nextChar;
+    if (nextChar === char) return this.advance(nextChar);
 
-    if (char === undefined) return nextChar;
+    if (char === undefined) return this.advance(nextChar);
 
     this.handleError(`Unexpected token: ${nextChar}`);
   }
 
-  consumeOneOf(...token: string[]): string {
-    const { length } = token;
+  consumeOneOf(...char: string[]): string {
+    const { length } = char;
 
-    const nextToken = this.nextChar();
+    const nextChar = this.peek();
 
     for (let i = 0; i < length; i++) {
-      if (nextToken === token[i]) return nextToken;
+      if (nextChar === char[i]) return this.advance(nextChar);
     }
 
-    this.handleError(`Unexpected token: ${nextToken}`);
+    this.handleError(`Unexpected token: ${nextChar}`);
   }
 
   consumeString(input: string): string {
     let output = '';
 
     for (let i = 0, l = input.length; i < l; i++) {
-      const next = this.nextChar();
+      const nextChar = this.peek();
 
-      if (next !== input[i]) this.handleError(`Unexpected token: ${next}`);
+      if (nextChar !== input[i])
+        this.handleError(`Unexpected token: ${nextChar}.`);
 
-      output += next;
+      output += this.advance(nextChar);
     }
 
     return output;
@@ -209,15 +212,19 @@ export class Lexer {
   }
 
   consumeDigit() {
-    const nextToken = this.nextChar();
+    const nextChar = this.nextChar();
 
-    if (!isDigit(nextToken)) this.handleError(`Unexpected token: ${nextToken}`);
+    if (!isDigit(nextChar)) this.handleError(`Unexpected token: ${nextChar}.`);
 
-    return nextToken;
+    return nextChar;
   }
 
   consumeDigits() {
-    return this.eatWhile(isDigit);
+    let output = this.consumeDigit();
+
+    while (isDigit(this.peek())) output += this.nextChar();
+
+    return output;
   }
 
   consumePeriod() {
@@ -230,12 +237,6 @@ export class Lexer {
 
   consumeCDATAStart() {
     return this.consumeString(CDATA_START);
-  }
-
-  consumeCDATA() {
-    return this.eatWhile(
-      (token) => isChar(token) && !this.matchString(CDATA_END)
-    );
   }
 
   consumeStartProcessingInstruction() {
@@ -303,19 +304,19 @@ export class Lexer {
   }
 
   consumeNameStartChar() {
-    const token = this.nextChar();
+    const nextChar = this.peek();
 
-    if (isNameStartChar(token)) return token;
+    if (isNameStartChar(nextChar)) return this.advance(nextChar);
 
-    this.handleError(`Unexpected name start char: ${token}.`);
+    this.handleError(`Unexpected name start char: ${nextChar}.`);
   }
 
   consumeEncNameStartChar() {
-    const token = this.nextChar();
+    const nextChar = this.peek();
 
-    if (isLetter(token)) return token;
+    if (isLetter(nextChar)) return this.advance(nextChar);
 
-    this.handleError(`Invalid character in encoding name: ${token}.`);
+    this.handleError(`Invalid character in encoding name: ${nextChar}.`);
   }
 
   consumeNCame() {
@@ -337,14 +338,19 @@ export class Lexer {
   }
 
   consumeEncName() {
-    return `${this.consumeEncNameStartChar()}${this.eatWhile(isEncNameChar)}`;
+    let output = this.consumeEncNameStartChar();
+
+    while (isEncNameChar(this.peek())) output += this.nextChar();
+
+    return output;
+    // return `${this.consumeEncNameStartChar()}${this.eatWhile(isEncNameChar)}`;
   }
 
   consumeS() {
     return `${this.consumeOneOf(WHITE_SPACE, NEWLINE, TAB, CARRIAGE_RETURN)}${this.eatS()}`;
   }
 
-  eatWhile(predicate: (token: string) => boolean | string): string {
+  eatWhile(predicate: (char: string) => boolean | string): string {
     let output = '';
 
     let result: boolean | string;
@@ -358,54 +364,115 @@ export class Lexer {
     return output;
   }
 
+  eatCDATA() {
+    return this.eatWhile((char) => {
+      if (char === LEFT_ANGLE_BRACKET && this.matchString(CDATA_END))
+        return false;
+
+      return isChar(char);
+    });
+  }
+
+  eatDigits() {
+    let output = this.consumeNameStartChar();
+
+    while (isDigit(this.peek())) output += this.nextChar();
+
+    return output;
+  }
+
   eatS(): string {
     return this.eatWhile(isS);
   }
 
   /* Unsafe */
   advance(char: string): string {
-    this.index++;
+    const { _source } = this;
 
-    this.col++;
+    this.index++;
 
     if (char === NEWLINE) {
       this.line++;
       this.col = 1;
+
+      return NEWLINE;
     }
+
+    if (char === CARRIAGE_RETURN) {
+      const nextChar = _source[this.index];
+
+      if (nextChar === NEWLINE) {
+        this.line++;
+        this.col = 1;
+        this.index++;
+      }
+
+      return NEWLINE;
+    }
+
+    this.col++;
 
     return char;
   }
 
   nextCharCode(): number {
-    const { index, _source: _input } = this;
+    const { index, _source } = this;
 
-    if (index === _input.length) CharCodes.EOF;
+    if (index === _source.length) CharCodes.EOF;
 
-    const char = _input[this.index++];
-
-    this.col++;
+    const char = _source[this.index++];
 
     if (char === NEWLINE) {
       this.line++;
       this.col = 1;
+
+      return NEWLINE_CODE;
     }
+
+    if (char === CARRIAGE_RETURN) {
+      const nextChar = _source[this.index];
+
+      if (nextChar === NEWLINE) {
+        this.line++;
+        this.col = 1;
+        this.index++;
+      }
+
+      return NEWLINE_CODE;
+    }
+
+    this.col++;
 
     return char.charCodeAt(0);
   }
 
   nextChar(): string {
-    const { index, _source: _input } = this;
+    const { index, _source } = this;
 
-    if (index === _input.length) return EOF;
+    if (index === _source.length) CharCodes.EOF;
 
-    const char = _input[this.index++];
-
-    this.col++;
+    const char = _source[this.index++];
 
     if (char === NEWLINE) {
       this.line++;
       this.col = 1;
+
+      return NEWLINE;
     }
+
+    if (char === CARRIAGE_RETURN) {
+      const nextChar = _source[this.index];
+
+      if (nextChar === NEWLINE) {
+        this.line++;
+        this.col = 1;
+        this.index++;
+      }
+
+      return NEWLINE;
+    }
+
+    this.col++;
 
     return char;
   }

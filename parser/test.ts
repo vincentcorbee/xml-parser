@@ -342,6 +342,7 @@ const xml2 = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 
 const domParser = new DOMParser();
 
+// const p = new XMLParser('<e>\r\r\r\r\n</e>');
 const p = new XMLParser(xml1);
 
 // let token;
@@ -373,8 +374,9 @@ const s = performance.now();
 
 // char.charCodeAt(0);
 
-const doc1 = p.parse();
-// const doc2 = domParser.parseFromString(xml1);
+// const doc1 = p.parse();
+// const doc2 = domParser.parseFromString('<e>\r\r\r\r\n</e>');
+const doc2 = domParser.parseFromString(xml1);
 
 const e = performance.now();
 
@@ -395,6 +397,17 @@ const e = performance.now();
 // console.dir(doc2, { depth: 1 });
 
 console.log(e - s);
+
+// console.log(doc1.documentElement);
+
 // console.log(e1 - s1);
 
 // generateCode();
+
+let a = [];
+
+a[2 ** 32 - 1] = 1;
+
+a[-1] = 2;
+
+console.log(a);

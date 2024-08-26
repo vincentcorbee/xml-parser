@@ -15,7 +15,11 @@ export type QName = {
   prefix: null | string;
 };
 
-export type AttributeNode = {
+export type Node = {
+  parentNode: ElementNode | DocumentNode | null;
+};
+
+export type AttributeNode = Node & {
   type: ATTRIBUTE_NODE;
   name: string;
   localName: string;
@@ -27,7 +31,7 @@ export type AttributeNode = {
 
 export type Attributes = Record<string, AttributeNode>;
 
-export type DocumentNode = {
+export type DocumentNode = Node & {
   type: DOCUMENT_NODE;
   name: '#document';
   documentElement: ElementNode | null;
@@ -38,20 +42,20 @@ export type DocumentNode = {
   children: Omit<XMLNode, 'DocumentNode'>[];
 };
 
-export type ProcessingInstructionNode = {
+export type ProcessingInstructionNode = Node & {
   type: PROCESSING_INSTRUCTION_NODE;
   name: string;
   data: string;
   target: string;
 };
 
-export type CDATASectionNode = {
+export type CDATASectionNode = Node & {
   type: CDATA_SECTION_NODE;
   name: '#cdata-section';
   data: string;
 };
 
-export type DocumentTypeNode = {
+export type DocumentTypeNode = Node & {
   type: DOCUMENT_TYPE_NODE;
   name: string;
 };
@@ -64,19 +68,19 @@ export type XMLDeclarationNode = {
   standalone: boolean;
 };
 
-export type TextNode = {
+export type TextNode = Node & {
   type: TEXT_NODE;
   name: '#text';
   data: string;
 };
 
-export type CommentNode = {
+export type CommentNode = Node & {
   type: COMMENT_NODE;
   name: '#comment';
   data: string;
 };
 
-export type ElementNode = {
+export type ElementNode = Node & {
   type: ELEMENT_NODE;
   name: string;
   localName: string;
@@ -84,7 +88,6 @@ export type ElementNode = {
   attributes: Attributes;
   children: XMLNode[];
   namespaceURI?: string;
-  parentNode: ElementNode | DocumentNode | null;
 };
 
 export type XMLNode =

@@ -54,12 +54,14 @@ const {
 } = Tokens;
 
 export const isChar = (char: string): boolean => {
+  const code = char.charCodeAt(0);
+
+  if (code === 0xfffe || code === 0xffff) return false;
+
   if (char.length > 1) return true;
 
-  const token = char.charCodeAt(0);
-
   /* Any character except UTF-16 surrogate pairs */
-  if (token < HIGH_SURROGATE_START || token > LOW_SURROGATE_END) return true;
+  if (code < HIGH_SURROGATE_START || code > LOW_SURROGATE_END) return true;
 
   return false;
 };
